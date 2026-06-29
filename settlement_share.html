@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직트 정산 대시보드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+  :root{
+    --salmon:#d9664a;--salmon-bg06:rgba(217,102,74,.06);--salmon-bg10:rgba(217,102,74,.10);
+    --salmon-bg12:rgba(217,102,74,.12);--salmon-bg18:rgba(217,102,74,.18);
+    --salmon-bd30:rgba(217,102,74,.30);--salmon-bd40:rgba(217,102,74,.40);--salmon-hover:rgba(217,102,74,.14);
+    --profit:#c83030;--loss:#2a5fa8;--good:#1a7a4a;
+    --t1:#2b2622;--t2:#6b625a;--t3:#968b80;--b1:#e8e0d8;--bg:#faf7f4;--card:#ffffff;--gray:#d4cdc4;
+    --font-n:'Nunito','Noto Sans KR',sans-serif;--mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t1);font-family:var(--font-n);line-height:1.55;padding:26px 18px 80px;font-size:14px}
+  .wrap{max-width:1200px;margin:0 auto}
+  .main-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .main-head .ico{width:36px;height:36px;border-radius:8px;background:var(--salmon-bg18);border:1.5px solid var(--salmon-bd40);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--salmon);flex-shrink:0}
+  .main-head .ttl{font-size:23px;font-weight:800;color:var(--t1)}
+  .main-head .sub{font-size:13px;color:var(--t2);margin-top:3px;font-weight:500}
+  .head-line{height:2px;background:linear-gradient(90deg,var(--salmon),transparent);margin:12px 0 22px;border-radius:1px}
+  .savebar{display:flex;align-items:center;gap:9px;background:var(--salmon-bg06);border:1px solid var(--salmon-bg18);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:12.5px;color:var(--t2);font-weight:600}
+  .savedot{width:8px;height:8px;border-radius:50%;background:var(--good);flex-shrink:0}
+  .flow{background:var(--salmon-bg06);border:1px solid var(--salmon-bg18);border-radius:8px;padding:13px 16px;font-family:var(--mono);font-size:12px;color:var(--t2);line-height:1.9;margin-bottom:8px}
+  .flow b{color:var(--salmon);font-weight:700}
+  .sec{display:flex;align-items:center;gap:10px;margin:28px 0 13px}
+  .sec .badge{font-size:12px;font-weight:800;color:var(--salmon);background:var(--salmon-bg12);padding:3px 10px;border-radius:4px;border:1px solid var(--salmon-bd30)}
+  .sec .label{font-size:15px;font-weight:700;color:var(--t1)}
+  .card{background:var(--card);border:1px solid var(--salmon-bg18);border-radius:8px;padding:18px;margin-bottom:14px}
+  .card-h{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:13px;display:flex;align-items:center;gap:8px}
+  .card-h::before{content:"";width:7px;height:7px;background:var(--salmon);border-radius:50%}
+  details.help{margin:0 0 14px;border:1px solid var(--salmon-bg18);border-radius:7px;background:var(--salmon-bg06)}
+  details.help summary{cursor:pointer;list-style:none;padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--salmon);font-family:var(--font-n)}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help summary::before{content:"＋ ";font-weight:700}
+  details.help[open] summary::before{content:"－ "}
+  details.help .body{padding:2px 14px 13px;font-size:12.5px;color:var(--t2);line-height:1.75}
+  details.help .body b{color:var(--t1);font-weight:700}
+  details.help .body .eq{font-family:var(--mono);color:var(--salmon);font-weight:600}
+  textarea{width:100%;min-height:130px;background:var(--bg);border:1px solid var(--b1);border-radius:8px;color:var(--t1);font-family:var(--mono);font-size:11.5px;padding:12px;resize:vertical;line-height:1.7}
+  textarea:focus{outline:none;border-color:var(--salmon-bd40)}
+  label.fld{display:block;font-size:12px;color:var(--t2);font-weight:600;margin:0 0 5px 2px}
+  input[type=text],input[type=number],select{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--t1);font-family:var(--font-n);font-size:13px;padding:9px 11px}
+  input[type=number]{font-family:var(--mono)}
+  input:focus,select:focus{outline:none;border-color:var(--salmon-bd40)}
+  .grid-cost{display:grid;grid-template-columns:.8fr 1.4fr 1fr;gap:10px;margin-bottom:12px}
+  .grid-cost2{display:grid;grid-template-columns:1.6fr 1fr;gap:10px;margin-bottom:12px}
+  .cost-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .imgbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .imgbtn{background:transparent;border:1px dashed var(--salmon-bd40);color:var(--salmon);border-radius:7px;font-family:var(--font-n);font-weight:700;font-size:12.5px;padding:9px 14px;cursor:pointer}
+  .imgbtn:hover{background:var(--salmon-hover)}
+  .thumb{height:46px;border-radius:6px;border:1px solid var(--b1);cursor:pointer}
+  .imgname{font-size:12px;color:var(--t3)}
+  .btn{background:var(--salmon);color:#fff;border:none;border-radius:7px;font-family:var(--font-n);font-weight:800;font-size:13px;padding:10px 20px;cursor:pointer;transition:background .15s}
+  .btn:hover{background:#c0573d}
+  .btn.ghost{background:transparent;border:1px solid var(--salmon-bd30);color:var(--salmon);font-weight:700}
+  .btn.ghost:hover{background:var(--salmon-hover)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .toggle button{flex:1;min-width:150px;background:var(--card);border:1px solid var(--b1);border-radius:7px;color:var(--t2);font-family:var(--font-n);font-size:13px;font-weight:600;padding:11px 12px;cursor:pointer;text-align:left;line-height:1.4}
+  .toggle button .sub{display:block;font-size:11px;color:var(--t3);font-weight:400;margin-top:3px}
+  .toggle button.on{background:var(--salmon);border-color:var(--salmon);color:#fff}
+  .toggle button.on .sub{color:rgba(255,255,255,.85)}
+  .hint{color:var(--t3);font-size:12px;margin-top:4px;line-height:1.6}
+  .warn{color:var(--salmon);font-size:12.5px;margin-top:8px;font-weight:600}
+  table{width:100%;border-collapse:collapse;margin-top:4px;font-family:var(--mono);font-size:12px}
+  th,td{text-align:right;padding:9px 7px;border-bottom:1px solid var(--b1);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;font-family:var(--font-n)}
+  th{color:var(--t2);font-weight:700;font-size:11px;font-family:var(--font-n)}
+  td.name{color:var(--t1);font-weight:600}
+  tr.total td{border-top:2px solid var(--salmon-bd40);border-bottom:none;font-weight:800;color:var(--t1);padding-top:12px}
+  .delx{background:transparent;border:1px solid var(--b1);color:var(--t3);border-radius:5px;cursor:pointer;font-family:var(--mono);font-weight:600;padding:3px 9px}
+  .proofbtn{background:transparent;border:1px dashed var(--salmon-bd40);color:var(--salmon);border-radius:5px;cursor:pointer;font-family:var(--font-n);font-weight:700;font-size:11.5px;padding:4px 9px}
+  .proofbtn:hover{background:var(--salmon-hover)}
+  .delx:hover{border-color:var(--profit);color:var(--profit)}
+  .tbwrap{overflow-x:auto}
+  .empty{color:var(--t3);font-size:13px;text-align:center;padding:26px 0}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:16px 0}
+  .kpi{background:var(--card);border:1px solid var(--salmon-bg18);border-radius:8px;padding:15px 16px}
+  .kpi .label{font-size:12.5px;font-weight:800;color:var(--salmon);margin-bottom:7px}
+  .kpi .val{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--t1);letter-spacing:-.5px}
+  .kpi .val.pay{color:var(--profit)}
+  .kpi .sub{font-size:11.5px;color:var(--t2);margin-top:7px;line-height:1.5}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:30px}
+  .modal.on{display:flex}
+  .modal img{max-width:92%;max-height:90%;border-radius:8px}
+  @media(max-width:780px){.summary{grid-template-columns:1fr 1fr}.grid-cost{grid-template-columns:1fr}.cost-two{grid-template-columns:1fr}.grid-cost2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="main-head">
+    <div class="ico">정산</div>
+    <div><div class="ttl">직트 · 레이님 정산 내역</div><div class="sub">2026년 3~6월분 · 수익 배분 결과 (확인용)</div></div>
+  </div>
+  <div class="head-line"></div>
+  <div class="savebar">
+    <span class="savedot"></span>
+    <span id="saveStatus">직트가 입력·계산한 정산 결과입니다. 아래에서 확인하실 수 있어요.</span>
+  </div>
+  <div class="flow"><b>공급가</b> − 판매수수료 − PG수수료 = <b>배분 대상</b> × 상품별 배분율 = <b>레이 세전</b> − 3.3% = <b>레이 실지급액</b></div>
+
+  <!-- C. 비용 반영 -->
+  <div class="sec"><span class="badge">C</span><span class="label">비용 반영 방식</span></div>
+  <div class="card">
+    <div class="toggle" id="costMode">
+      <button class="on" data-mode="A" onclick="setMode('A')">A · 직트 전액 부담<span class="sub">배분에 영향 없음 (현 계약)</span></button>
+      <button data-mode="B" onclick="setMode('B')">B · 비용 선차감<span class="sub">비용 먼저 빼고 배분 (협의 방향)</span></button>
+      <button data-mode="C" onclick="setMode('C')">C · 매출 10% 적립<span class="sub">레이님 제안 방식</span></button>
+    </div>
+    <div class="hint" id="modeHint"></div>
+  </div>
+
+  <!-- D. 결과 -->
+  <div class="sec"><span class="badge">D</span><span class="label">정산 결과</span></div>
+  <details class="help"><summary>이 숫자들은 뭔가요?</summary>
+    <div class="body">
+      <b>총 결제금액</b> — 고객들이 낸 돈 전부.<br>
+      <b>배분 대상</b> — 레이님과 나눌 금액. <span class="eq">공급가 − 판매수수료 − PG수수료</span><br>
+      <b>레이님 실지급액</b> — 배분율 적용 후 원천징수 3.3%까지 뺀, 실제 보낼 돈.<br>
+      <b>직트 순이익</b> — 배분 대상에서 레이님 몫과 비용을 뺀 직트님 몫.
+    </div>
+  </details>
+  <div class="summary">
+    <div class="kpi"><div class="label">총 결제금액</div><div class="val" id="sGross">—</div><div class="sub" id="sGrossSub"></div></div>
+    <div class="kpi"><div class="label">배분 대상</div><div class="val" id="sBase">—</div><div class="sub">공급가 − 수수료</div></div>
+    <div class="kpi"><div class="label">레이님 실지급액</div><div class="val pay" id="sPay">—</div><div class="sub" id="sPaySub"></div></div>
+    <div class="kpi"><div class="label">직트 순이익</div><div class="val" id="sMine">—</div><div class="sub" id="sMineSub"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">정산일별(회차별) 집계</div>
+    <details class="help"><summary>이건 뭔가요?</summary>
+      <div class="body">라클 정산일(예: 3/10, 4/10)별로 나눠서 보여줘요. 3개월치를 한꺼번에 붙여넣어도, 각 달이 얼마인지 따로 파악할 수 있어요. 맨 아래 <b>이번 묶음 합계</b>가 이번에 레이님께 정산할 총액이에요.</div>
+    </details>
+    <div class="tbwrap" id="byDateTable"><div class="empty">라클 파일을 붙여넣으면 정산일별로 나뉘어 표시됩니다.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">건별 전체 항목</div>
+    <details class="help"><summary>각 항목 뜻</summary>
+      <div class="body">
+        <b>결제금액</b> 고객이 낸 돈 · <b>공급가</b> 부가세 뺀 금액 · <b>부가세</b> 직트가 낼 세금 · <b>수수료</b> 라클+PG가 떼간 돈 · <b>정산금액</b> 통장 입금액 · <b>배분대상</b> 공급가−수수료 · <b>을%</b> 레이 배분율 · <b>레이세전</b> 배분대상×을%
+      </div>
+    </details>
+    <div class="tbwrap" id="fullTable"><div class="empty">라클 파일을 붙여넣으면 모든 항목이 표시됩니다.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">상품별 배분 집계</div>
+    <div class="tbwrap" id="byClassTable"><div class="empty">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-h">비용 집계 (부담자별)</div>
+    <div class="tbwrap" id="costSumTable"><div class="empty">—</div></div>
+  </div>
+</div>
+
+<script>
+const RULES=[
+  {test:s=>/트레이딩\s*키|트레이딩key|trading\s*key/i.test(s)&&!/패키지/.test(s),name:'트레이딩키',rate:0.50},
+  {test:s=>/심화|전문과정\s*\(심화/i.test(s),name:'심화과정',rate:0.70},
+  {test:s=>/오프라인/i.test(s),name:'오프라인 강의',rate:1.00},
+  {test:s=>/입문.*중급.*전문|풀\s*패키지|패키지/i.test(s),name:'풀패키지',rate:0.276},
+  {test:s=>/1개월|한달|정보\s*제공/i.test(s),name:'1개월 정보제공',rate:0.50},
+  {test:s=>/입문|기초/i.test(s),name:'기초강의',rate:0.276},
+];
+function classify(s){for(const r of RULES){if(r.test(s))return r;}return{name:'미분류',rate:null};}
+function won(n){if(n==null||isNaN(n))return '—';return Math.round(n).toLocaleString('ko-KR');}
+function num(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v;}
+function toN(x){if(x==null)return NaN;return parseFloat(String(x).replace(/[^0-9.\-]/g,''));}
+
+let jiktCosts=[], reyCosts=[], mode='A', pendingImg={직트:null,레이:null};
+
+// ===== 자동 저장 / 복원 (이 컴퓨터 브라우저에 보관) =====
+// ===== 공유용: 데이터가 코드에 박혀 있음 (레이님 확인용, 입력 불가) =====
+const EMBED_RAW="정산일\t정산형태\t주문번호\t주문명\t구매자명\t결제일시\t취소일시\t결제형태\t결제상태\t결제방법\t결제금액\t취소금액\t공급가\t부가세\t판매수수료(부가세포함)\tPG수수료(부가세포함)\t정산금액\n2026-03-10\t정산\t2026-3215998\t1개월_ 옵션 투자 정보 제공\t콜대원\t2026-02-01T11:23:21\t\t\t결제\t카카오페이(포인트)\t200000\t0\t181818\t18182\t22000\t7700\t170300\n2026-03-10\t정산\t2026-3219953\t1개월_ 옵션 투자 정보 제공\tYK J\t2026-02-02T15:35:31\t\t\t결제\t네이버페이(포인트)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-03-10\t정산\t2026-3224831\t1개월_ 옵션 투자 정보 제공\t이현우\t2026-02-03T19:08:32\t\t\t결제\t네이버페이(카드)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-03-10\t정산\t2026-3227510\t1개월_ 옵션 투자 정보 제공\t이우섭\t2026-02-04T13:26:36\t\t\t결제\t일반카드결제\t200000\t0\t181818\t18182\t22000\t7700\t170300\n2026-03-10\t정산\t2026-3227568\t1개월_ 옵션 투자 정보 제공\tnobeta\t2026-02-04T13:49:33\t\t\t결제\t일반카드결제\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-03-10\t정산\t2026-3227775\t1개월_ 옵션 투자 정보 제공\t김지영\t2026-02-04T15:04:41\t\t\t결제\t카카오페이(포인트)\t170000\t0\t154545\t15455\t18700\t6545\t144755\n2026-03-10\t정산\t2026-3251225\t1개월_ 옵션 투자 정보 제공\t박정해\t2026-02-12T13:57:17\t\t\t결제\t일반카드결제\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-04-10\t정산\t2026-3316552\t1개월_ 옵션 투자 정보 제공\tYK J\t2026-03-01T16:49:28\t\t\t결제\t네이버페이(포인트)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-04-10\t정산\t2026-3321087\t1개월_ 옵션 투자 정보 제공\t이현우\t2026-03-02T19:17:48\t\t\t결제\t네이버페이(카드)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-04-10\t정산\t2026-3322054\t1개월_ 옵션 투자 정보 제공\t댕댕이\t2026-03-02T22:17:14\t\t\t결제\t네이버페이(카드)\t100000\t0\t90909\t9091\t11000\t3850\t85150\n2026-04-10\t정산\t2026-3325628\t1개월_ 옵션 투자 정보 제공\t김지영\t2026-03-03T17:56:39\t\t\t결제\t카카오페이(포인트)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-04-10\t정산\t2026-3329073\t1개월_ 옵션 투자 정보 제공\t박정해\t2026-03-04T14:43:20\t\t\t결제\t일반카드결제\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-04-10\t정산\t2026-3330934\t1개월_ 옵션 투자 정보 제공\t이우섭\t2026-03-04T22:40:51\t\t\t결제\t일반카드결제\t170000\t0\t154545\t15455\t18700\t6545\t144755\n2026-04-10\t정산\t2026-3403281\t해외 옵션 입문 과정 (기초강의)\tNate Kim\t2026-03-21T02:42:08\t\t\t결제\t일반카드결제\t130000\t0\t118182\t11818\t14300\t5005\t110695\n2026-04-10\t정산\t2026-3413890\t입문과정+중급과정+전문과정+1개월_ 트레이딩 키 (풀 패키지)\t박수연\t2026-03-24T13:31:45\t\t\t결제\t네이버페이(카드)\t750000\t0\t681818\t68182\t82500\t28875\t638625\n2026-05-11\t정산\t2026-3458372\t1개월_ 옵션 투자 정보 제공\t이현우\t2026-04-02T20:19:54\t\t\t결제\t네이버페이(카드)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-05-11\t정산\t2026-3459300\t1개월_ 옵션 투자 정보 제공\tYK J\t2026-04-03T00:48:09\t\t\t결제\t네이버페이(카드)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-05-11\t정산\t2026-3460695\t1개월_ 옵션 투자 정보 제공\t박정해\t2026-04-03T14:06:28\t\t\t결제\t일반카드결제\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-05-11\t정산\t2026-3462643\t1개월_ 옵션 투자 정보 제공\t댕댕이\t2026-04-03T23:30:05\t\t\t결제\t카카오페이(포인트)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-05-11\t정산\t2026-3463330\t1개월_ 옵션 투자 정보 제공\t이우섭\t2026-04-04T09:24\t\t\t결제\t일반카드결제\t170000\t0\t154545\t15455\t18700\t6545\t144755\n2026-06-10\t정산\t2026-3554736\t1개월_ 옵션 투자 정보 제공\t이현우\t2026-05-01T16:55:25\t\t\t결제\t계좌이체\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-06-10\t정산\t2026-3555118\t1개월_ 옵션 투자 정보 제공\tYK J\t2026-05-01T20:33:56\t\t\t결제\t네이버페이(카드)\t120000\t0\t109091\t10909\t13200\t4620\t102180\n2026-06-10\t정산\t2026-3555440\t1개월_ 옵션 투자 정보 제공\t이우섭\t2026-05-01T22:50:06\t\t\t결제\t삼성페이\t170000\t0\t154545\t15455\t18700\t6545\t144755\n2026-06-10\t정산\t2026-3556471\t입문과정+중급과정+전문과정+1개월_ 트레이딩 키 (풀 패키지)\t박경서\t2026-05-02T13:43:20\t\t\t결제\t네이버페이(카드)\t750000\t0\t681818\t68182\t82500\t28875\t638625\n2026-06-10\t정산\t2026-3560270\t1개월_ 옵션 투자 정보 제공\t박정해\t2026-05-04T10:34:12\t\t\t결제\t일반카드결제\t120000\t0\t109091\t10909\t13200\t4620\t102180";
+const EMBED_JIKT=[{"name": "캡컷 3월", "amt": 19800}, {"name": "캡컷 4월", "amt": 19800}, {"name": "캡컷 5월", "amt": 19800}, {"name": "클로드 3/17", "amt": 33514}, {"name": "클로드 3/20", "amt": 138110}, {"name": "클로드 4/20", "amt": 165499}, {"name": "클로드 5/20", "amt": 169274}, {"name": "클로드 6/20", "amt": 34361}, {"name": "클로드 6/22", "amt": 140615}, {"name": "법무법인 김장리", "amt": 330000}, {"name": "브루 3월", "amt": 14900}, {"name": "브루 4월", "amt": 14900}, {"name": "브루 5월", "amt": 14900}, {"name": "브루 6월", "amt": 14900}];
+const EMBED_REY=[{"name": "챗베이스 3월", "amt": 60272}, {"name": "챗베이스 4월", "amt": 59856}, {"name": "챗베이스 5월", "amt": 60848}, {"name": "챗베이스 6월", "amt": 62368}];
+
+function loadEmbedded(){
+  // 박힌 라클 데이터를 화면 뒤편 숨은 입력칸에 주입 (계산 엔진 재사용)
+  let ta=document.getElementById('rawInput');
+  if(!ta){ta=document.createElement('textarea');ta.id='rawInput';ta.style.display='none';document.body.appendChild(ta);}
+  ta.value=EMBED_RAW;
+  jiktCosts=EMBED_JIKT.map(c=>({name:c.name,amt:c.amt,img:null}));
+  reyCosts=EMBED_REY.map(c=>({name:c.name,amt:c.amt,img:null}));
+}
+// 공유본에서는 저장/입력 기능을 모두 비활성화 (빈 함수로 둠)
+function saveState(){}
+
+function renderCosts(){
+  [['직트',jiktCosts,'jTable'],['레이',reyCosts,'rTable']].forEach(([who,arr,tid])=>{
+    const el=document.getElementById(tid);
+    if(!el)return;
+    if(arr.length===0){el.innerHTML='<div class="empty">'+(who==='직트'?'직트':'레이님')+' 비용이 아직 없어요.</div>';return;}
+    let h='<table><thead><tr><th>항목</th><th>금액</th></tr></thead><tbody>';
+    arr.forEach((c,i)=>{
+      h+='<tr><td class="name">'+c.name+'</td><td>'+won(c.amt)+'</td></tr>';
+    });
+    h+='<tr class="total"><td>합계</td><td>'+won(arr.reduce((s,c)=>s+c.amt,0))+'</td></tr></tbody></table>';
+    el.innerHTML=h;
+  });
+}
+
+const MODE_HINT={
+  A:'A: 비용은 직트 순이익에서만 차감됩니다. 레이님 지급액은 매출 기준 그대로입니다. (현 계약 제6조)',
+  B:'B: 배분 대상에서 직트 비용을 먼저 뺀 뒤 비율을 적용합니다. 레이님 몫도 줄어듭니다. (협의 방향)',
+  C:'C: 배분 대상의 10%를 비용 적립으로 떼고 나머지를 배분합니다. (레이님 제안 방식)'
+};
+function setMode(m){mode=m;document.querySelectorAll('#costMode button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));document.getElementById('modeHint').textContent=MODE_HINT[m];calc();}
+
+// 라클 파일 파싱 — 줄 깨짐/공백/탭 모두 대응
+// 라클 금액 컬럼 순서: 결제금액, 취소금액, 공급가, 부가세, 판매수수료, PG수수료, 정산금액 (7개)
+function parseRaw(){
+  const raw=document.getElementById('rawInput').value;
+  if(!raw||!raw.trim())return{rows:[],err:''};
+  // 줄바꿈/탭을 공백으로 → 한 덩어리 텍스트
+  let text=raw.replace(/\r/g,' ').replace(/\t/g,' ').replace(/\n/g,' ');
+  // 헤더 단어 제거
+  text=text.replace(/정산일|정산형태|주문번호|주문명|구매자명|결제일시|취소일시|결제형태|결제상태|결제방법|결제금액|취소금액|공급가|부가세|판매수수료\(부가세포함\)|PG수수료\(부가세포함\)|정산금액|상품명|클래스/g,' ');
+  // 주문번호(20xx-6자리이상) 기준으로 레코드 분리. 단 정산일(앞쪽 날짜)을 포함하기 위해 경계를 살짝 앞으로
+  const recRegex=/20\d{2}-\d{6,}/g;
+  const idxs=[]; let mm;
+  while((mm=recRegex.exec(text))!==null){idxs.push(mm.index);}
+  let chunks=[];
+  if(idxs.length>0){
+    for(let i=0;i<idxs.length;i++){
+      // 시작점: 이 주문번호 앞쪽으로, 정산일(YYYY-MM-DD)을 포함하도록 직전 경계까지 당김
+      let start = i===0 ? 0 : idxs[i-1];
+      // 직전 주문번호 이후 ~ 현재 주문번호 사이에서 마지막 날짜(=현재 레코드의 정산일)를 찾기 위해
+      // chunk를 '현재 주문번호 직전 날짜 ~ 다음 주문번호 직전 날짜'로 잡음
+      let from = idxs[i];
+      // 현재 주문번호 앞 30자 내 날짜를 정산일로 흡수
+      const pre = text.slice(Math.max(0, idxs[i]-30), idxs[i]);
+      const preDate = pre.match(/20\d{2}-\d{2}-\d{2}(?![T\d])/g);
+      const settleDate = preDate ? preDate[preDate.length-1] : '';
+      let to = i+1<idxs.length ? idxs[i+1] : text.length;
+      // 다음 레코드의 정산일이 현재 chunk 끝에 붙는 것 방지: 다음 주문번호 앞 날짜는 제외
+      if(i+1<idxs.length){
+        const nextPre=text.slice(Math.max(0,idxs[i+1]-30), idxs[i+1]);
+        const ndm=nextPre.match(/20\d{2}-\d{2}-\d{2}(?![T\d])/);
+        if(ndm){const cut=text.lastIndexOf(ndm[0], idxs[i+1]); if(cut>from)to=cut;}
+      }
+      chunks.push({text:text.slice(from,to), settleDate});
+    }
+  } else {
+    chunks=raw.split(/\n/).filter(l=>l.trim()).map(t=>({text:t,settleDate:''}));
+  }
+
+  const rows=[];
+  for(const chunkObj of chunks){
+    const chunk=chunkObj.text;
+    // 상품명 추출
+    let name='';
+    const nm=chunk.match(/[가-힣A-Za-z0-9_()+\s]*?(?:정보\s*제공|과정|패키지|강의|트레이딩\s*키|입문|중급|전문|심화|오프라인)[가-힣A-Za-z0-9_()+\s]*/);
+    if(nm){
+      name=nm[0].replace(/\s+/g,' ').trim()
+        .replace(/^[0-9\-]+\s*/,'')
+        .replace(/\s*(결제|계좌이체|네이버페이|카카오페이|토스|삼성페이|일반카드|토스페이|카드|포인트|가상계좌)[^]*$/,'')
+        .trim();
+      // 상품명 표준화: 키워드 중심으로 잘라 구매자명 등 꼬리 제거
+      if(/풀\s*패키지|입문.*중급.*전문|패키지/.test(name)) name='입문과정+중급과정+전문과정 (풀 패키지)';
+      else if(/심화|전문과정\s*\(심화/.test(name)) name='해외 옵션 전문과정 (심화강의)';
+      else if(/오프라인/.test(name)) name='오프라인 강의';
+      else if(/트레이딩\s*키/.test(name)) name='트레이딩키';
+      else if(/1개월|정보\s*제공/.test(name)) name='1개월 옵션 정보 제공';
+      else if(/입문|기초/.test(name)) name='해외 옵션 입문 과정 (기초강의)';
+    }
+    // 날짜/시간/주문번호 제거 후 숫자만
+    const cleaned=chunk.replace(/20\d{2}-\d{6,}/g,' ').replace(/\d{4}-\d{2}-\d{2}T[\d:]+/g,' ').replace(/\d{4}-\d{2}-\d{2}/g,' ');
+    const nums=(cleaned.match(/\d[\d,]*/g)||[]).map(s=>parseInt(s.replace(/,/g,''),10)).filter(n=>!isNaN(n));
+    // 금액으로 볼 큰 수만 (>=100). 라클은 결제금액,취소금액(0),공급가,부가세,판매수수료,PG수수료,정산금액
+    // 취소금액 0은 작은수라 제외될 수 있음 → 큰수 6개 또는 7개 구조
+    const big=nums.filter(n=>n>=100);
+    if(!name||big.length<5){continue;}
+    // 끝에서부터 매핑(가장 안정적): 정산금액=마지막, PG=끝-1, 판매수수료=끝-2, 부가세=끝-3, 공급가=끝-4, 결제금액=첫번째(최댓값)
+    const settle=big[big.length-1];
+    const fee2=big[big.length-2];   // PG수수료
+    const fee1=big[big.length-3];   // 판매수수료
+    const vat=big[big.length-4];    // 부가세
+    const supply=big[big.length-5]; // 공급가
+    const gross=big[0];             // 결제금액(첫번째=최대)
+    // 정확 검증: 공급가+부가세 ≈ 결제금액? 아니면 보정
+    let realSupply=supply, realVat=vat;
+    if(Math.abs((supply+vat)-gross)>5){ // 어긋나면 결제금액 기준 재계산
+      realSupply=Math.round(gross/1.1); realVat=gross-realSupply;
+    }
+    // 배분대상 = 공급가 - 판매수수료 - PG수수료 (확정 공식)
+    const base=realSupply-fee1-fee2;
+    const fee=gross-settle; // 총수수료
+    // 정산일: 레코드 분리 때 잡은 settleDate 우선, 없으면 chunk 내 첫 날짜
+    let payDate=chunkObj.settleDate||'';
+    if(!payDate){const dm=chunk.match(/20\d{2}-\d{2}-\d{2}(?![T\d])/);if(dm)payDate=dm[0];}
+    rows.push({name,gross,supply:realSupply,vat:realVat,fee,settle,base,payDate});
+  }
+  return{rows,err:rows.length===0?'표를 인식하지 못했어요. 라클 파일을 헤더까지 복사해 붙여넣어 주세요.':''};
+}
+
+function calc(){
+  saveState();
+  const {rows,err}=parseRaw();
+  const w=document.getElementById('parseWarn')||{};
+  if(rows.length===0){
+    w.innerHTML=err?'<div class="warn">'+err+'</div>':'';
+    document.getElementById('fullTable').innerHTML='<div class="empty">라클 파일을 붙여넣으면 모든 항목이 표시됩니다.</div>';
+    ['sGross','sBase','sPay','sMine'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('byClassTable').innerHTML='<div class="empty">—</div>';
+    document.getElementById('byDateTable').innerHTML='<div class="empty">라클 파일을 붙여넣으면 정산일별로 나뉘어 표시됩니다.</div>';
+    renderCostSum();return;
+  }
+  w.innerHTML='<div class="hint">'+rows.length+'건 인식됨.</div>';
+
+  const cJikt=jiktCosts.reduce((s,c)=>s+c.amt,0);
+  const cRey=reyCosts.reduce((s,c)=>s+c.amt,0);
+  const bizCost=cJikt; // 사업비용 = 직트 비용 (레이 비용은 배분에 영향 없음)
+
+  let totGross=0,totSupply=0,totVat=0,totFee=0,totBase=0,reyGross=0;
+  const det=rows.map(r=>{const cls=classify(r.name);totGross+=r.gross;totSupply+=r.supply;totVat+=r.vat;totFee+=r.fee;totBase+=r.base;return{...r,cls};});
+
+  let adjFactor=1,modeNote='';
+  if(mode==='B'){adjFactor=totBase>0?Math.max(0,totBase-bizCost)/totBase:1;modeNote=' · 비용 '+won(bizCost)+' 선차감';}
+  else if(mode==='C'){adjFactor=0.9;modeNote=' · 매출 10% 적립';}
+
+  det.forEach(d=>{if(d.cls.rate==null){d.rey=null;d.adjBase=d.base;return;}d.adjBase=d.base*adjFactor;d.rey=d.adjBase*d.cls.rate;reyGross+=d.rey;});
+  const reyTax=reyGross*0.033, reyPay=reyGross-reyTax;
+  let jiktNet;
+  if(mode==='A')jiktNet=(totBase-reyGross)-bizCost;
+  else if(mode==='B')jiktNet=(totBase*adjFactor-reyGross);
+  else jiktNet=(totBase*0.9-reyGross);
+
+  document.getElementById('sGross').textContent=won(totGross);
+  document.getElementById('sGrossSub').textContent=rows.length+'건';
+  document.getElementById('sBase').textContent=won(totBase);
+  document.getElementById('sPay').textContent=won(reyPay);
+  document.getElementById('sPaySub').textContent='세전 '+won(reyGross)+' · 원천징수 '+won(reyTax);
+  document.getElementById('sMine').textContent=won(jiktNet);
+  document.getElementById('sMineSub').textContent=mode+'방식'+modeNote;
+
+  let h='<table><thead><tr><th>상품</th><th>결제금액</th><th>공급가</th><th>부가세</th><th>수수료</th><th>정산금액</th><th>배분대상</th><th>을%</th><th>레이세전</th></tr></thead><tbody>';
+  det.forEach(d=>{const rt=d.cls.rate==null?'<span style="color:var(--salmon)">미분류</span>':(d.cls.rate*100).toFixed(1)+'%';h+='<tr><td class="name">'+d.name+'</td><td>'+won(d.gross)+'</td><td>'+won(d.supply)+'</td><td>'+won(d.vat)+'</td><td>'+won(d.fee)+'</td><td>'+won(d.settle)+'</td><td>'+won(d.adjBase)+'</td><td>'+rt+'</td><td>'+(d.rey==null?'—':won(d.rey))+'</td></tr>';});
+  h+='<tr class="total"><td>합계</td><td>'+won(totGross)+'</td><td>'+won(totSupply)+'</td><td>'+won(totVat)+'</td><td>'+won(totFee)+'</td><td>'+won(det.reduce((s,d)=>s+d.settle,0))+'</td><td>'+won(det.reduce((s,d)=>s+d.adjBase,0))+'</td><td></td><td>'+won(reyGross)+'</td></tr></tbody></table>';
+  if(det.some(d=>d.cls.rate==null))h+='<div class="warn">미분류 상품이 있어요. 상품명 규칙에 없어 배분에서 빠졌습니다.</div>';
+  document.getElementById('fullTable').innerHTML=h;
+
+  const bc={};
+  det.forEach(d=>{const k=d.cls.name;if(!bc[k])bc[k]={name:k,rate:d.cls.rate,cnt:0,base:0,rey:0};bc[k].cnt++;bc[k].base+=d.adjBase;bc[k].rey+=(d.rey||0);});
+  let bh='<table><thead><tr><th>상품</th><th>건수</th><th>배분대상</th><th>을%</th><th>레이세전</th></tr></thead><tbody>';
+  Object.values(bc).forEach(c=>{bh+='<tr><td class="name">'+c.name+'</td><td>'+c.cnt+'</td><td>'+won(c.base)+'</td><td>'+(c.rate==null?'미분류':(c.rate*100).toFixed(1)+'%')+'</td><td>'+(c.rate==null?'—':won(c.rey))+'</td></tr>';});
+  bh+='<tr class="total"><td>합계</td><td>'+det.length+'</td><td>'+won(det.reduce((s,d)=>s+d.adjBase,0))+'</td><td></td><td>'+won(reyGross)+'</td></tr></tbody></table>';
+  document.getElementById('byClassTable').innerHTML=bh;
+
+  // 정산일별(회차별) 집계
+  const bd={};
+  det.forEach(d=>{
+    const k=d.payDate||'(날짜없음)';
+    if(!bd[k])bd[k]={date:k,cnt:0,gross:0,vat:0,fee:0,base:0,rey:0};
+    bd[k].cnt++; bd[k].gross+=d.gross; bd[k].vat+=d.vat; bd[k].fee+=d.fee;
+    bd[k].base+=d.adjBase; bd[k].rey+=(d.rey||0);
+  });
+  const dates=Object.keys(bd).sort();
+  let dh='<table><thead><tr><th>정산일</th><th>건수</th><th>결제금액</th><th>부가세</th><th>수수료</th><th>배분대상</th><th>레이세전</th><th>레이실지급</th></tr></thead><tbody>';
+  dates.forEach(k=>{const r=bd[k];const pay=r.rey*0.967;dh+='<tr><td class="name">'+k+'</td><td>'+r.cnt+'</td><td>'+won(r.gross)+'</td><td>'+won(r.vat)+'</td><td>'+won(r.fee)+'</td><td>'+won(r.base)+'</td><td>'+won(r.rey)+'</td><td>'+won(pay)+'</td></tr>';});
+  const tPay=reyGross*0.967;
+  dh+='<tr class="total"><td>이번 묶음 합계</td><td>'+det.length+'</td><td>'+won(totGross)+'</td><td>'+won(totVat)+'</td><td>'+won(totFee)+'</td><td>'+won(det.reduce((s,d)=>s+d.adjBase,0))+'</td><td>'+won(reyGross)+'</td><td>'+won(tPay)+'</td></tr></tbody></table>';
+  document.getElementById('byDateTable').innerHTML=dh;
+
+  renderCostSum();
+}
+
+function renderCostSum(){
+  const cJikt=jiktCosts.reduce((s,c)=>s+c.amt,0);
+  const cRey=reyCosts.reduce((s,c)=>s+c.amt,0);
+  const cst=document.getElementById('costSumTable');
+  if(jiktCosts.length===0&&reyCosts.length===0){cst.innerHTML='<div class="empty">입력된 비용이 없어요.</div>';return;}
+  let h='<table><thead><tr><th>부담자</th><th>건수</th><th>금액</th></tr></thead><tbody>';
+  if(jiktCosts.length)h+='<tr><td class="name">직트</td><td>'+jiktCosts.length+'</td><td>'+won(cJikt)+'</td></tr>';
+  if(reyCosts.length)h+='<tr><td class="name">레이</td><td>'+reyCosts.length+'</td><td>'+won(cRey)+'</td></tr>';
+  h+='<tr class="total"><td>사업비용 (배분 차감 대상 = 직트)</td><td></td><td>'+won(cJikt)+'</td></tr></tbody></table>';
+  cst.innerHTML=h;
+}
+
+loadEmbedded();
+setMode('A');renderCosts();calc();
+</script>
+</body>
+</html>
