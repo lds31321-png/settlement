@@ -455,20 +455,37 @@ function allReceipts(){
 function renderReceipts(){
   const area=document.getElementById('receiptArea');
   if(!area)return;
-  const all=allReceipts();
-  if(all.length===0){
-    area.innerHTML='<div style="font-size:12.5px;color:var(--t3);padding:8px 0">첨부된 영수증이 아직 없습니다.</div>';
-    return;
+  const withImg=allReceipts();
+  let h='';
+  if(withImg.length>0){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px">';
+    h+='<div style="font-size:13px;font-weight:700;color:var(--t1)">비용 영수증 (항목별)</div>';
+    h+='<button class="imgbtn" onclick="downloadAllReceipts()">📥 영수증 전부 받기 (zip)</button></div>';
   }
-  let h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex-wrap:wrap;gap:8px">';
-  h+='<div style="font-size:13px;font-weight:700;color:var(--t1)">첨부된 영수증 '+all.length+'건</div>';
-  h+='<button class="imgbtn" onclick="downloadAllReceipts()">📥 영수증 전부 받기 (zip)</button></div>';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px">';
-  all.forEach(c=>{
-    h+='<div style="text-align:center"><img src="'+c.img+'" onclick="showModal(this.src)" style="width:100%;height:72px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--b1)"><div style="font-size:10.5px;color:var(--t3);margin-top:3px;line-height:1.3">'+c.who+'·'+c.name+'</div></div>';
+  [['직트',jiktCosts],['레이',reyCosts]].forEach(([who,arr])=>{
+    if(!arr.length)return;
+    h+='<div style="font-size:12.5px;font-weight:700;color:var(--salmon);margin:14px 0 6px">'+(who==='직트'?'직트':'레이님')+' 비용</div>';
+    h+='<table><thead><tr><th>항목</th><th>금액</th><th>영수증</th></tr></thead><tbody>';
+    arr.forEach((c,i)=>{
+      let proof='<span style="color:var(--t3)">—</span>';
+      if(c.img){
+        proof='<img src="'+c.img+'" onclick="showModal(this.src)" class="thumb"> <button class="imgbtn" style="font-size:10.5px;padding:3px 9px;vertical-align:middle" onclick="downloadByRef(\''+who+'\','+i+')">받기</button>';
+      }
+      h+='<tr><td class="name">'+c.name+'</td><td>'+won(c.amt)+'</td><td>'+proof+'</td></tr>';
+    });
+    h+='</tbody></table>';
   });
-  h+='</div>';
-  area.innerHTML=h;
+  area.innerHTML=h||'<div style="font-size:12.5px;color:var(--t3);padding:8px 0">입력된 비용이 없습니다.</div>';
+}
+function downloadByRef(who,i){
+  const c=(who==='직트'?jiktCosts:reyCosts)[i];
+  if(!c||!c.img){return;}
+  const m=String(c.img).match(/^data:(image\/[\w.+-]+);base64,/);
+  const ext=m?(m[1].split('/')[1]||'png').replace('jpeg','jpg'):'png';
+  const safe=(who+'_'+c.name).replace(/[\\/:*?"<>|]/g,'_');
+  const a=document.createElement('a');
+  a.href=c.img; a.download=safe+'.'+ext;
+  document.body.appendChild(a);a.click();a.remove();
 }
 function showModal(src){const m=document.getElementById('imgModal');if(!m)return;document.getElementById('modalImg').src=src;m.classList.add('on');}
 function closeModal(){const m=document.getElementById('imgModal');if(m)m.classList.remove('on');}
